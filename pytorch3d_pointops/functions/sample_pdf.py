@@ -8,7 +8,7 @@
 
 
 import torch
-from pytorch3d_utils import _C
+from pytorch3d_pointops import _C
 
 
 def sample_pdf(

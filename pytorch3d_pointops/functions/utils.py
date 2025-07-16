@@ -14,7 +14,7 @@ from .knn import knn_points
 
 
 if TYPE_CHECKING:
-    from pytorch3d_utils.structures import Pointclouds
+    from pytorch3d_pointops.structures import Pointclouds
 
 
 def masked_gather(points: torch.Tensor, idx: torch.Tensor) -> torch.Tensor:

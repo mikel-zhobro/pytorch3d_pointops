@@ -35,32 +35,28 @@ def get_existing_ccbin(nvcc_args: List[str]) -> Optional[str]:
 
 
 def get_extensions():
-    no_extension = os.getenv("PYTORCH3D_UTILS_NO_EXTENSION", "0") == "1"
+    no_extension = os.getenv("PYTORCH3D_POINTOPS_NO_EXTENSION", "0") == "1"
     if no_extension:
-        msg = "SKIPPING EXTENSION BUILD. PYTORCH3D_UTILS WILL NOT WORK!"
+        msg = "SKIPPING EXTENSION BUILD. PYTORCH3D_POINTOPS WILL NOT WORK!"
         print(msg, file=sys.stderr)
         warnings.warn(msg)
         return []
 
     this_dir = os.path.dirname(os.path.abspath(__file__))
-    pytorch3d_utils_dir = os.path.join(this_dir, "pytorch3d_utils", "csrc")
+    extensions_dir = os.path.join(this_dir, "pytorch3d_pointops", "csrc")
 
-    # Get pytorch3d_utils sources
-    sources = glob.glob(
-        os.path.join(pytorch3d_utils_dir, "**", "*.cpp"), recursive=True
-    )
-    source_cuda = glob.glob(
-        os.path.join(pytorch3d_utils_dir, "**", "*.cu"), recursive=True
-    )
+    # Get pytorch3d_pointops sources
+    sources = glob.glob(os.path.join(extensions_dir, "**", "*.cpp"), recursive=True)
+    source_cuda = glob.glob(os.path.join(extensions_dir, "**", "*.cu"), recursive=True)
 
     extension = CppExtension
 
     extra_compile_args = {"cxx": ["-std=c++17"]}
     define_macros = []
-    include_dirs = [pytorch3d_utils_dir]
+    include_dirs = [extensions_dir]
 
     force_cuda = os.getenv("FORCE_CUDA", "0") == "1"
-    force_no_cuda = os.getenv("PYTORCH3D_UTILS_FORCE_NO_CUDA", "0") == "1"
+    force_no_cuda = os.getenv("PYTORCH3D_POINTOPS_FORCE_NO_CUDA", "0") == "1"
     if (
         not force_no_cuda and torch.cuda.is_available() and CUDA_HOME is not None
     ) or force_cuda:
@@ -119,7 +115,7 @@ def get_extensions():
 
     ext_modules = [
         extension(
-            "pytorch3d_utils._C",
+            "pytorch3d_pointops._C",
             sources,
             include_dirs=include_dirs,
             define_macros=define_macros,
@@ -130,7 +126,7 @@ def get_extensions():
     return ext_modules
 
 
-if os.getenv("PYTORCH3D_UTILS_NO_NINJA", "0") == "1":
+if os.getenv("PYTORCH3D_POINTOPS_NO_NINJA", "0") == "1":
 
     class BuildExtension(torch.utils.cpp_extension.BuildExtension):
         def __init__(self, *args, **kwargs):
@@ -140,13 +136,13 @@ else:
     BuildExtension = torch.utils.cpp_extension.BuildExtension
 
 setup(
-    name="pytorch3d_point_utils",
+    name="pytorch3d_pointops",
     version="0.1.0",
     author="FAIR",
     url="https://github.com/facebookresearch/pytorch3d",
     description="PyTorch3D utilities for point cloud operations",
     packages=[
-        "pytorch3d_utils",
+        "pytorch3d_pointops",
     ],
     install_requires=["torch"],
     ext_modules=get_extensions(),

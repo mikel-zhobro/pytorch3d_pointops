@@ -7,7 +7,7 @@
 # pyre-unsafe
 
 import torch
-from pytorch3d_utils import _C
+from pytorch3d_pointops import _C
 from torch.autograd import Function
 from torch.autograd.function import once_differentiable
 

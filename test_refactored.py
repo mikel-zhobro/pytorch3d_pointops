@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 
 import torch
-from pytorch3d_utils.structures.point_structure import Pointclouds
+from pytorch3d_pointops.structures.point_structure import Pointclouds
+
+
+# set default device to cuda
+if torch.cuda.is_available():
+    torch.set_default_device("cuda")
 
 
 def test_basic_functionality():
