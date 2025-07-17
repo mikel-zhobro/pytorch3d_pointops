@@ -143,6 +143,8 @@ setup(
     description="PyTorch3D utilities for point cloud operations",
     packages=[
         "pytorch3d_pointops",
+        "pytorch3d_pointops.functions",
+        "pytorch3d_pointops.structures",
     ],
     install_requires=["torch"],
     ext_modules=get_extensions(),

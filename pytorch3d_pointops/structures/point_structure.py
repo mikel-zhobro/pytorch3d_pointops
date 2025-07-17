@@ -255,10 +255,17 @@ class Pointclouds:
             for feature_name, feature_data in features.items():
                 feature_parsed = self._parse_auxiliary_input(feature_data)
                 feature_list, feature_padded, feature_C = feature_parsed
-                self._features_list[feature_name] = feature_list
-                self._C[feature_name] = feature_C if feature_C is not None else 0
-                if feature_padded is not None:
+                if feature_list is not None:
+                    self._features_list[feature_name] = feature_list
+                elif feature_padded is not None:
                     self._features_padded[feature_name] = feature_padded
+                else:
+                    raise ValueError(
+                        "Features must be either a list or a padded tensor with \
+                            shape (batch_size, P, C) where P is the maximum number of \
+                            points in a cloud and C is the number of channels."
+                    )
+                self._C[feature_name] = feature_C if feature_C is not None else 0
 
     def _parse_auxiliary_input(
         self, aux_input
@@ -1361,3 +1368,53 @@ def subsample(
         points=points_list,
         features=filtered_features if filtered_features else None,
     )
+
+
+def all_close(
+    pcd1: Pointclouds, pcd2: Pointclouds, rtol=1e-05, atol=1e-08, verbose=False
+) -> bool:
+    """
+    Check if two Pointclouds objects are close to each other.
+
+    Args:
+        pcd1: First Pointclouds object.
+        pcd2: Second Pointclouds object.
+        rtol: Relative tolerance.
+        atol: Absolute tolerance.
+
+    Returns:
+        bool indicating whether the two point clouds are close.
+    """
+    if pcd1.device != pcd2.device:
+        raise ValueError("Pointclouds must be on the same device.")
+
+    points_all_close = torch.allclose(
+        pcd1.points_packed(), pcd2.points_packed(), rtol, atol
+    )
+    if verbose:
+        print("Points all close:", points_all_close)
+
+    # check whether they have the same keys:
+    if set(pcd1.features_packed().keys()) != set(pcd2.features_packed().keys()):
+        if verbose:
+            print(
+                "Features keys mismatch:",
+                "Keys in pcd1:",
+                pcd1.features_packed().keys(),
+                "Keys in pcd2:",
+                pcd2.features_packed().keys(),
+            )
+        return False
+    features_all_close = {
+        name: torch.allclose(
+            pcd1.get_features_packed(name),
+            pcd2.get_features_packed(name),
+            rtol,
+            atol,
+        )
+        for name in pcd1.features_packed().keys()
+    }
+    if verbose:
+        print("Features all close:", features_all_close)
+
+    return points_all_close and all(features_all_close.values())
